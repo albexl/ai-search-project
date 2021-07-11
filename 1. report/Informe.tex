@@ -1,0 +1,217 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%							Inteligencia Artificial           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{article}
+
+\usepackage[latin1]{inputenc}
+
+\usepackage[spanish]{babel}
+
+% Paquetes de la AMS:
+\usepackage[total={6in,9.8in},top=0.50in, left=1in, right=1in]{geometry}
+\usepackage{amsmath, amsthm, amsfonts}
+\usepackage{graphics}
+\usepackage{float}
+\usepackage{epsfig}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{latexsym}
+\usepackage{newlfont}
+\usepackage{epstopdf}
+\usepackage{amsthm}
+\usepackage{epsfig}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage[colorlinks]{hyperref}
+\usepackage[x11names,table]{xcolor}
+\usepackage{graphics}
+\usepackage{wrapfig}
+\usepackage[rflt]{floatflt}
+\usepackage{multicol}
+\usepackage{listings} \lstset {language = python, basicstyle=\bfseries\ttfamily, keywordstyle = \color{blue}, commentstyle = \bf\color{brown}}
+
+
+\renewcommand{\labelenumi}{$\bullet$}
+
+\title{\bf\huge Inteligencia Artificial \\Problemas de b\'usqueda}
+\author{\Large Alberto Gonz\'alez Rosales\\
+	\large {Grupo C-511}
+	}
+\date{}
+
+\begin{document}
+\maketitle
+
+En este proyecto se brindan varios archivos en \emph{python}, los cuales simulan el mundo de \emph{Pacman}. En esta soluci\'on hay porciones de c\'odigo incompletos, que tendr\'an que ser rellenados para lograr objetivos espec\'ificos como llegar a alguna posici\'on particular dentro del laberinto o recolectar comida de forma eficiente. Las tareas asignadas y soluciones propuestas ser\'an discutidas a continuaci\'on. 
+
+\section{Preguntas 1 - 4: Algoritmos de Recorrido}
+
+El primer \emph{problema de b\'usqueda} propuesto consist\'ia en encontrar una posici\'on espec\'ifica dentro del laberinto y devolver la secuencia de acciones a realizar para llegar desde la posici\'on de \emph{Pacman} hasta el objetivo. 
+
+Para esto se brinda una clase llamada \emph{SearchProblem}, la cual es abstracta y tiene la estructura cl\'asica de un problema de b\'usqueda. Cuenta con m\'etodos para devolver el estado inicial del problema y determinar si un estado es final. Adem\'as, tiene una funci\'on \emph{getSuccessors} que devuelve, dado un estado, una lista de triplas con la siguiente informaci\'on: el estado siguiente, la acci\'on a realizar para llegar a ese estado y el costo de hacer esa acci\'on.
+
+Por tanto, la tarea a realizar es implementar la forma en la que se busca la posici\'on objetivo en este grafo de estados.
+
+\subsection{Depth-First Search}
+
+El primer recorrido es \emph{depth-first search} o \emph{dfs}. Para simular el recorrido de \emph{dfs} se tiene implementada en el m\'odulo \emph{utils.py} una clase \emph{Stack}, la cual es una estructura de datos cuya pol\'itica de inserci\'on y extracci\'on es de la forma \emph{LIFO}, o sea, \emph{Last In First Out}.
+
+Se inicia el algoritmo insertando el estado inicial en nuestra estructura de datos. Luego, mientras no est\'e vac\'ia, se extrae de la pila el estado correspondiente, si este estado es el objetivo, el algoritmo acaba, sino se revisa la lista de los sucesores del mismo y se insertan en la pila todos aquellos que no hayan sido visitados.
+
+Como se pide adem\'as una lista de acciones para llegar al estado objetivo, se cuenta con un array \emph{parent}, el cual tendr\'a para cada estado alcanzable en el recorrido cual fue el estado que lo descubri\'o y con que acci\'on fue descubierto.
+
+Se implement\'o adem\'as una funci\'on \emph{getActions} encargada de reconstruir la secuencia de acciones; a este m\'etodo se le pasa el estado objetivo y el array \emph{parent} y este recorre todos los estados en el camino desde el objetivo hasta el estado inicial, conformando una lista de las acciones en el orden contrario al que se realizaron.
+
+\subsection{Breadth-First Search}
+
+El segundo recorrido es \emph{breadth-first search} o \emph{bfs}. Este recorrido, en t\'erminos de implementaci\'on es muy parecido al anterior. De hecho, solo cambia la estructura de datos con que se almacenan los estados. En este caso es una cola, la cual tambi\'en est\'a implementada en \emph{utils.py}, cuya pol\'itica de inserci\'on y extracci\'on es de la forma \emph{FIFO}, \emph{First In First Out}, y es lo que hace que el orden de visitar los estados sea diferente en ambos algoritmos.
+
+Igualmente se comienza insertando el estado inicial en la cola. Se extrae un estado mientras no est\'e vac\'ia. Se comprueba si es el objetivo y se termina en caso de que lo sea. Sino se revisan sus sucesores y se insertan en la cola si no han sido visitados. Este es el momento donde se asigna a cada estado cual es su correspondiente en el array \emph{parent}.
+
+Una vez terminado el recorrido se reconstruye la secuencia de acciones con el m\'etodo \emph{getActions}.
+
+Este recorrido tiene la particularidad de que si los costos para transitar de un estado a otro son iguales, entonces encontrar\'a el camino de costo m\'inimo desde el estado inicial al estado objetivo. Sin embargo puede no hacerlo en el caso m\'as general que es cuando los costos no son todos iguales.
+
+\subsection{Uniform Cost Search}
+
+La b\'usqueda de costo uniforme se utiliza cuando se desea encontrar el camino de menor costo total a un estado particular. O sea, de todos los caminos que existen entre el estado inicial y el estado objetivo, aquel que minimice la suma de los costos de las aristas transitadas.
+
+Se tendr\'a en todo momento un array \emph{cost} que indica el menor costo descubierto entre el estado inicial y todos los dem\'as. Al inicio del algoritmo se puede interpretar que el costo del estado inicial es cero, y el de todos los dem\'as estados es \emph{infinito}.
+
+El algoritmo inicia insertando en alg\'un tipo de estructura de datos el estado inicial. Ahora, mientras queden estados insertados, se extrae el que actualmente tiene el menor costo desde el estado inicial. Se recorren los sucesores de este estado y se comprueba para cada uno de ellos si se puede \emph{relajar}, o sea, si puede mejorar el costo que tiene actualmente. Para eso se hace la comprobaci\'on $cost[currentState] + edgeCost < cost[currentSuccessor]$, si esto se cumple entonces se actualiza el costo de ese estado sucesor y se inserta en la estructura.
+
+Para realizar este algoritmo de forma eficiente se cuenta en el m\'odulo \emph{utils.py} con una clase \emph{PriorityQueue}. Esta estructura asigna a cada estado actualmente contenido en ella una prioridad, y cada vez que se le pide extraer un estado devolver\'a aquel con la menor prioridad. Como se quiere en todo momento extraer el m\'as cercano al inicio, la prioridad para cada estado ser\'a el menor costo encontrado para ese estado hasta el momento.
+
+Solo queda saber como actualizar el array \emph{parent} para luego reconstruir la secuencia de acciones. Para esto hay que notar que cada vez que se pueda \emph{relajar} un estado es porque se encontr\'o un camino de menor costo desde el estado inicial hasta ese estado, el cual, potencialmente, es parte del camino de costo m\'inimo hasta el estado objetivo. Por tanto se le asigna como padre el estado que provoc\'o su \emph{relajaci\'on}.
+
+\subsection{A*}
+
+El algoritmo \emph{A*} se utiliza cuando a un problema de b\'usqueda se le asigna una heur\'istica. Una heur\'istica es una funci\'on que dado un estado devuelve un valor asociado al mismo, que da una medida de cuan \emph{distante} se encuentra de un estado final. Un ejemplo de heur\'istica es la \emph{nula}, que devuelve el valor cero independientemente de cual sea el estado que eval\'ue.
+
+Digamos ahora que a cada estado le corresponde un valor $h(u)$, el valor de la heur\'istica evaluada en ese estado. Definamos como $g(u)$ el menor costo para ir desde el estado inicial al estado $u$ utilizando el algoritmo de \emph{B\'usqueda de Costo Uniforme}.
+
+Sea $f(u) = g(u) + h(u)$, entonces el algoritmo \emph{A*} se implementa igual que el \emph{UCS} con la diferencia de que la prioridad de cada estado es su valor de $f$.
+
+\subsection{Generalidades y particularidades}
+En principio cada algoritmo para recorrer el grafo de estado tiene sus particularidades, pero son bastante parecidos. Todos terminan cuando sale de la estructura de datos alg\'un estado final, todos inician insertando el estado inicial en la estructura y todos expanden cada estado con una funci\'on que indica cuales son los sucesores del mismo.
+
+Las diferencias radican principalmente en la estructura de datos que utiliza cada uno ya que las pol\'iticas de inserci\'on y extracci\'on difieren, logrando as\'i cada uno ajustarse mejor a su prop\'osito.
+
+
+\section{Preguntas 5 - 6: Encontrando las esquinas}
+
+El problema que se plantea a continuaci\'on es dado un laberinto encontrar el camino m\'as corto que pase por las cuatro esquinas del mismo. O sea, \emph{Pacman} comienza en una posici\'on y tiene que hacer un recorrido donde toque cada esquina al menos una vez. Adem\'as este recorrido debe ser de longitud m\'inima.
+
+\subsection{Caracterizando el problema}
+
+Para este problema de b\'usqueda se pide definir los estados que caracterizan el problema, as\'i como implementar las funciones \emph{getStartState}, \emph{isGoalState} y \emph{getSuccessors}.
+
+La representaci\'on de estado utilizada fue un par $(x, y)$ que representa la posici\'on actual donde se encuentra \emph{Pacman} y un vector \emph{booleano} de tama\~no $4$, que indica para cada esquina si ya se visit\'o o no.
+
+El estado inicial consiste en la posici\'on inicial de \emph{Pacman}, informaci\'on que se tiene cuando se inicializa el juego, y un vector \emph{booleano} con todos sus elementos tomando valor \emph{False}, ya que ninguna esquina ha sido visitada.
+
+Para determinar si un estado es final basta con comprobar si alguno de sus valores tiene valor \emph{False}, sino significa que todas las esquinas han sido visitadas y, por tanto, terminamos.
+
+Los sucesores de un estado ser\'an unas ternas de la forma \emph{nextState}, \emph{action}, \emph{cost}. El costo para transitar de un estado a otro es $1$ en este problema. Las acciones pertenecen al conjunto (\emph{UP}, \emph{DOWN}, \emph{LEFT}, \emph{RIGHT}). El estado al que se transita dado que se realiza determinada acci\'on es de la forma (\emph{nextPosition}, \emph{mask}), donde \emph{nextPosition} es la nueva posici\'on de \emph{Pacman} y \emph{mask} es el vector booleano actualizado si la nueva posici\'on es una de las esquinas.
+
+\subsection{Heur\'isticas}
+
+Se probaron tres heur\'isticas consistentes para resolver este problema. A continuaci\'on se explicar\'a y analizar\'a cada una.
+
+\subsubsection{Cantidad de esquinas sin visitar}
+
+La primera heur\'istica es bastante intuitiva, consiste en devolver para cada estado la cantidad de esquinas que a\'un no han sido visitadas.
+
+An\'alisis de admisibilidad:
+
+\begin{itemize}
+\item $h >= 0$ ya que la cantidad de esquinas restantes siempre es un n\'umero entero en el rango $[0, 4]$.
+
+\item $h <= h*$: supongamos que la cantidad de esquinas sin visitar en el estado \emph{state} es $x$, entonces en la soluci\'on \'optima el valor de $h*$ tiene que ser mayor o igual que $x$ ya que se necesitan al menos $x$ pasos del \emph{Pacman} para visitar las $x$ esquinas restantes.
+
+\end{itemize}
+
+An\'alisis de consistencia:
+
+\begin{itemize}
+\item Sea la arista que existe desde el estado $x$ al estado $y$, se cumple que $h(x) - h(y) <= cost(x->y)$. En este problema el costo de transitar cada arista es $1$. Por tanto se cumple que $h(x) - h(y) <= 1$ siempre, ya que cuando pasamos de un estado a otro estado sucesor puede ocurrir que ese nuevo estado sea una esquina o no. En el segundo caso los valores de $h$ en esos estados son iguales y en el primero difieren en $1$.
+
+\end{itemize}
+
+Esta heur\'istica a pesar de ser consistente expand\'ia una cantidad considerable de estados. En los casos de prueba con los que cuenta el proyecto mostraba que expand\'ia alrededor de $2000$ estados, lo cual solo otorgaba $1$ punto de $3$ posibles.
+
+\subsubsection{Mayor distancia Manhattan}
+
+Una heur\'istica un poco m\'as elaborada es devolver la distancia a la esquina que a\'un no ha sido visitada m\'as lejana de la posici\'on de \emph{Pacman} si tenemos en cuenta la \emph{distancia Manhattan}.
+
+An\'alisis de admisibilidad:
+
+\begin{itemize}
+\item $h >= 0$ ya que la \emph{distancia Manhattan} entre dos posiciones siempre es un n\'umero entero en el rango $[0, n + m]$, donde $n$ y $m$ son las dimensiones del laberinto.
+
+\item $h <= h*$: si la cantidad de esquinas sin visitar es $x$, el valor de la heur\'istica en la soluci\'on \'optima pasa por definir un orden en el que se visitar\'an las $x$ esquinas y devolver la menor de las distancias recorridas visitando las esquinas en ese orden. Esto es equivalente a resolver el problema del viajante, se estar\'ia determinando el orden \'optimo en que se deben visitar las esquinas para minimizar el costo total. Ls soluci\'on propuesta $h$ ser\'a la mayor de las \emph{distancias Manhattan}, pero, en la soluci\'on \'optima la distancia entre dos posiciones tiene que ser la distancia real entre ambas, teniendo en cuenta que en el laberinto existen obst\'aculos. Ser\'ia realizar un recorrido \emph{bfs} y devolver la distancia desde la posici\'on de partida hasta la final. Queda bastante claro entonces que la heur\'istica $h$ es menor o igual a $h*$ ya que la \emph{distancia Manhattan} no tiene en cuenta el hecho de que puedan existir obst\'aculos en el laberinto y devuelve la distancia m\'as corta entre dos posiciones si no hubiesen obst\'aculos en el camino.
+
+\end{itemize}
+
+Analicemos su consistencia:
+
+\begin{itemize}
+\item Sea la arista que existe desde el estado $x$ al estado $y$, se cumple que $h(x) - h(y) <= cost(x->y)$. En este problema el costo de transitar cada arista es $1$. Por tanto se cumple que $h(x) - h(y) <= 1$ siempre, ya que cuando pasamos de un estado a otro estado sucesor la \emph{distancia Manhattan} entre ambas posiciones hasta la esquina m\'as alejada puede diferir a lo sumo en $1$. Esto se debe a que dos estados adyacentes mantienen las misma coordenada $X$ o la misma coordenada $Y$, y la coordenada que cambia difiere en $1$ de la anterior.
+
+\end{itemize}
+
+Esta heur\'istica expand\'ia una cantidad de estados cercana a los $1160$, suficiente para obtener el m\'aximo de puntos en esta pregunta. Adem\'as, el algoritmo de b\'usqueda con esta heur\'istica no sufre afectaciones en su complejidad temporal ya que el costo de calcular la misma es constante.
+
+
+\subsubsection{Mayor distancia real}
+
+La heur\'istica probada con mejores resultados fue la de devolver la \emph{distancia real} m\'as grande desde la posici\'on de \emph{Pacman} hasta alguna de las esquinas. Cuando se dice \emph{distancia real} se hace alusi\'on a la distancia que es devuelta al realizar el algoritmo \emph{bfs}.
+
+An\'alisis de admisibilidad:
+
+\begin{itemize}
+\item $h >= 0$ ya que la \emph{distancia real} entre dos posiciones siempre es un n\'umero entero en el rango $[0, n * m]$, donde $n$ y $m$ son las dimensiones del laberinto.
+
+\item $h <= h*$: como se enunci\'o en la demostraci\'on de admisibilidad de la heur\'istica anterior, la soluci\'on \'optima de este problema es la menor suma de \emph{distancias reales} entre posiciones consecutivas dado que determinamos un orden en que visitar las esquinas. Cuando en un estado quedan tanto $0$ como $1$ esquina por visitar, el valor $h$ ser\'a igual al de $h*$. Cuando queda m\'as de una esquina el valor de $h$ ser\'a menor que el de $h*$.
+
+
+\end{itemize}
+
+Analicemos su consistencia:
+
+\begin{itemize}
+\item Sea la arista que existe desde el estado $x$ al estado $y$, se cumple que $h(x) - h(y) <= cost(x->y)$. En este problema el costo de transitar cada arista es $1$. Por tanto se cumple que $h(x) - h(y) <= 1$ siempre, ya que cuando pasamos de un estado a otro estado sucesor la \emph{distancia real} entre ambas posiciones hasta la esquina m\'as alejada puede diferir a lo sumo en $1$. Esto se debe a que dos estados adyacentes mantienen las misma coordenada $X$ o la misma coordenada $Y$, y la coordenada que cambia difiere en $1$ de la anterior.
+
+\end{itemize}
+
+Con esta heur\'istica la cantidad de estados expandidos eran aproximadamente $800$. La complejidad temporal del algoritmo de b\'usqueda se afecta un poco ya que para calcular el valor de la heur\'istica en un estado es necesario realizar un recorrido \emph{bfs}.
+
+\section{Pregunta 7: Comiendo todos los puntos}
+
+El siguiente problema de b\'usqueda consist\'ia en encontrar una secuencia de acciones que permitiera a \emph{Pacman} comerse todos los puntos que se encuentran en el laberinto con el menor costo posible. La idea de esta pregunta tambi\'en era dise\~nar una heur\'istica que se ajustara al problema y que expandiera la menor cantidad de estados posibles.
+
+Las heur\'isticas que se analizar\'an a continuaci\'on son las vistas previamente con la excepci\'on de que ahora no se revisan solo las cuatro esquinas sino toda posici\'on que tenga un punto que \emph{Pacman} se puede comer; as\'i que solo se mostrar\'an los resultados obtenidos con cada una de ellas ya que las demostraciones de consistencia y admisibilidad son equivalentes.
+
+\subsection{Mayor distancia Manhattan}
+
+La cantidad de estados expandidos con esta heur\'istica es aproximadamente $9000$, lo que garantizaba un total de $3$ puntos en esta pregunta, lo cual es aceptable pero a\'un mejorable.
+
+\subsection{Mayor distancia real}
+
+Con la heur\'istica de la mayor \emph{distancia real}, a pesar de que se demora considerablemente m\'as que la anterior, se expanden solamente una cantidad cercana a los $4000$ estados. Para obtener el m\'aximo de puntuaci\'on en esta pregunta era necesario que se expandieran a lo sumo $7000$.
+
+
+\section{Pregunta 8: B\'usqueda sub\'optima}
+
+Esta pregunta enuncia la necesidad de encontrar a veces una soluci\'on que sea lo suficientemente buena aunque no sea la \'optima. El problema radica en que la soluci\'on \'optima de algunos problemas es demasiado costosa de computar en t\'erminos de tiempo o memoria.
+
+Para el problema de comer todos los puntos en el laberinto se pide implementar un agente que siempre vaya al punto m\'as cercano. Esta estrategia \emph{greedy} no siempre encuentra la soluci\'on \'optima pero es bastante r\'apida y devuelve una soluci\'on suficientemente buena.
+
+El proyecto brinda una implementaci\'on incompleta de una agente. Solo falta completar una funci\'on que recibe un estado y devuelve una lista de acciones que llevan de ese estado al punto m\'as cercano. Lo interesante es que hasta este punto en el proyecto, si se implementaron correctamente los algoritmos de b\'usqueda, se tiene todo lo necesario para completar esta funci\'on sin mucho trabajo.
+
+Podemos interpretar este problema como un problema de encontrar una posici\'on en el laberinto, o sea, cuando antes nos interesaban las esquinas ahora nos interesan las posiciones donde existe un punto que \emph{Pacman} se puede comer. As\'i que nuestros estados finales ser\'an aquellos donde la matriz \emph{food} en la posici\'on $(x, y)$ tenga valor \emph{True}.
+
+Una vez definido nuestro problema de b\'usqueda solo resta encontrar una secuencia de acciones con los algoritmos \emph{A*}, \emph{Uniform Cost Search} o \emph{BFS}.    
+
+\end{document}
